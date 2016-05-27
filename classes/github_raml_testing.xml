@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:oauth2="http://www.mulesoft.org/schema/mule/oauth2" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/oauth2 http://www.mulesoft.org/schema/mule/oauth2/current/mule-oauth2.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd">
+    <http:request-config name="HTTP_Request_Configuration" host="api.github.com" port="443" doc:name="HTTP Request Configuration" protocol="HTTPS">
+        <oauth2:authorization-code-grant-type clientId="" clientSecret="" redirectionUrl="http://localhost:8082/callback">
+            <oauth2:authorization-request authorizationUrl="https://github.com/login/oauth/authorize" localAuthorizationUrl="http://localhost:8082/login" scopes="user,user:email,user:follow,public_repo,repo,repo_deployment,repo:status,delete_repo,notifications,gist,read:repo_hook,write:repo_hook,admin:repo_hook,admin:org_hook,read:org,write:org,admin:org,read:public_key,write:public_key,admin:public_key"/>
+            <oauth2:token-request tokenUrl="https://github.com/login/oauth/access_token">
+                <oauth2:token-response accessToken="#[payload.'access_token']" refreshToken="#[payload.'refresh_token']"/>
+            </oauth2:token-request>
+        </oauth2:authorization-code-grant-type>
+        <http:raml-api-configuration location="https://anypoint.mulesoft.com/apiplatform/repository/public/organizations/52560d3f-c37a-409d-9887-79e0a9a9ecff/apis/7782/versions/7918/files/root"/>
+    </http:request-config>
+    <http:listener-config name="HTTP_Listener_Configuration" host="0.0.0.0" port="8081" doc:name="HTTP Listener Configuration" basePath="/github"/>
+    <flow name="emojis">
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/emojis" doc:name="HTTP"/>
+        <http:request config-ref="HTTP_Request_Configuration" path="/emojis" method="GET" doc:name="HTTP">
+        </http:request>
+        <logger message="#[payload]" level="INFO" doc:name="Logger"/>
+    </flow>
+    <flow name="get_a_user">
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/username" doc:name="HTTP (User)"/>
+        <http:request config-ref="HTTP_Request_Configuration" path="/users/{username}" method="GET" doc:name="Get a user information">
+            <http:request-builder>
+                <http:uri-param paramName="username" value="NathanNam"/>
+            </http:request-builder>
+        </http:request>
+        <logger message="#[payload]" level="INFO" doc:name="Copy_of_Logger"/>
+    </flow>
+</mule>
